@@ -107,7 +107,7 @@ namespace laser_geometry
     for (unsigned int index = 0; index< scan_in.ranges.size(); index++)
     {
       const float range = ranges(0, index);
-      if (preservative || ((range < range_cutoff) && (range >= scan_in.range_min))) //if valid or preservative
+      if (   ( (range > scan_in.range_max) && (range < scan_in.range_min) )   ) //if valid or preservative
       {
         cloud_out.points[count].x = output(0,index);
         cloud_out.points[count].y = output(1,index);
