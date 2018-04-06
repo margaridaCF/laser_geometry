@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <ros/assert.h>
 #include <tf2/LinearMath/Transform.h>
+#include <set>
 
 namespace laser_geometry
 {
@@ -280,6 +281,7 @@ const boost::numeric::ublas::matrix<double>& LaserProjection::getUnitVectors_(do
   {
     size_t n_pts = scan_in.ranges.size ();
     Eigen::ArrayXXd ranges (n_pts, 2);
+    Eigen::ArrayXXd ranges_free (n_pts, 2);
     Eigen::ArrayXXd output (n_pts, 2);
 
     // Get the ranges into Eigen format
@@ -413,12 +415,33 @@ const boost::numeric::ublas::matrix<double>& LaserProjection::getUnitVectors_(do
     if (range_cutoff < 0)
       range_cutoff = scan_in.range_max;
 
-    unsigned int count = 0;
+    std::set<int> free;
     for (size_t i = 0; i < n_pts; ++i)
     {
       //check to see if we want to keep the point
       const float range = scan_in.ranges[i];
-      if (range < range_cutoff && range >= scan_in.range_min)
+      if (!std::isfinite(range) && range > 0)
+      {
+        // Get ranges into Eigen format
+        ranges_free (i, 0) = (double) scan_in.range_max;
+        ranges_free (i, 1) = (double) scan_in.range_max;
+        free.insert(i);
+      }
+      else
+      {
+        ranges_free (i, 0) = (double) 0;
+        ranges_free (i, 1) = (double) 0;
+      }
+    }
+
+    output = ranges_free * co_sine_map_;
+
+
+    unsigned int count = 0;
+    for (size_t i = 0; i < n_pts; ++i)
+    {
+      
+      if(free.find(i) != free.end())
       {
         float *pstep = (float*)&cloud_out.data[count * cloud_out.point_step];
 
@@ -454,37 +477,6 @@ const boost::numeric::ublas::matrix<double>& LaserProjection::getUnitVectors_(do
         //make sure to increment count
         ++count;
       }
-
-      /* TODO: Why was this done in this way, I don't get this at all, you end up with a ton of points with NaN values
-       * why can't you just leave them out?
-       *
-      // Invalid measurement?
-      if (scan_in.ranges[i] >= range_cutoff || scan_in.ranges[i] <= scan_in.range_min)
-      {
-        if (scan_in.ranges[i] != LASER_SCAN_MAX_RANGE)
-        {
-          for (size_t s = 0; s < cloud_out.fields.size (); ++s)
-            pstep[s] = bad_point;
-        }
-        else
-        {
-          // Kind of nasty thing:
-          //   We keep the oringinal point information for max ranges but set x to NAN to mark the point as invalid.
-          //   Since we still might need the x value we store it in the distance field
-          pstep[0] = bad_point;           // X -> NAN to mark a bad point
-          pstep[1] = co_sine_map (i, 1);  // Y
-          pstep[2] = 0;                   // Z
-
-          if (store_intensity)
-          {
-            pstep[3] = bad_point;           // Intensity -> NAN to mark a bad point
-            pstep[4] = co_sine_map (i, 0);  // Distance -> Misused to store the originnal X
-          }
-          else
-            pstep[3] = co_sine_map (i, 0);  // Distance -> Misused to store the originnal X
-        }
-      }
-      */
     }
 
     //resize if necessary
