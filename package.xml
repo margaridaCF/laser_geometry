@@ -1,5 +1,5 @@
 <package>
-  <name>laser_geometry</name>
+  <name>laser_free_to_cloud</name>
   <version>1.6.4</version>
   <description>
     This package contains a class for extracting the free parts from a 2D laser scan as defined by
