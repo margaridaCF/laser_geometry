@@ -2,21 +2,19 @@
   <name>laser_geometry</name>
   <version>1.6.4</version>
   <description>
-    This package contains a class for converting from a 2D laser scan as defined by
+    This package contains a class for extracting the free parts from a 2D laser scan as defined by
     sensor_msgs/LaserScan into a point cloud as defined by sensor_msgs/PointCloud
     or sensor_msgs/PointCloud2. In particular, it contains functionality to account
     for the skew resulting from moving robots or tilting laser scanners.
+    Based on laser_geometry by Tully Foote and Radu Bogdan Rusu.
   </description>
-  <maintainer email="dave.hershberger@sri.com">Dave Hershberger</maintainer>
+  <maintainer email="margaridaCostaFaria@gmail.com">Margarida Faria</maintainer>
   <maintainer email="william@osrfoundation.org">William Woodall</maintainer>
-  <license>BSD</license>
+  <license>MIT</license>
 
-  <author>Tully Foote</author>
-  <author>Radu Bogdan Rusu</author>
+  <author>Margarida Faria</author>
 
-  <url>http://ros.org/wiki/laser_geometry</url>
-
-  <buildtool_depend version_gte="0.5.68">catkin</buildtool_depend>
+  <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>angles</build_depend>
   <build_depend>boost</build_depend>

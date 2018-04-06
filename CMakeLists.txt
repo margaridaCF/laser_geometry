@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(laser_geometry)
+project(laser_free_to_cloud)
 
 find_package(catkin REQUIRED
     COMPONENTS
