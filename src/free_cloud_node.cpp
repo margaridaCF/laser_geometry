@@ -9,7 +9,7 @@ namespace free_cloud_node
 	{
   		laser_geometry::LaserProjection projector;  
   		sensor_msgs::PointCloud2 cloud_out;
-  		projector.projectLaser(*laser_scan, cloud_out, -1.0);
+  		projector.projectFreeLaser(*laser_scan, cloud_out, -1.0);
   		free_cloud_pub.publish(cloud_out);
 	}
 }

@@ -34,8 +34,12 @@ target_link_libraries(laser_free_to_cloud ${Boost_LIBRARIES} ${tf_LIBRARIES})
 
 
 add_executable(free_cloud_node src/free_cloud_node.cpp)
-
 target_link_libraries(free_cloud_node
+  ${catkin_LIBRARIES} laser_free_to_cloud
+)
+
+add_executable(laser_scan_to_cloud_node src/laser_scan_to_cloud_node.cpp)
+target_link_libraries(laser_scan_to_cloud_node
   ${catkin_LIBRARIES} laser_free_to_cloud
 )
 

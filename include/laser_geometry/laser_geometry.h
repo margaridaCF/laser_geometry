@@ -155,6 +155,15 @@ namespace laser_geometry
       }
 
 
+      void projectFreeLaser (const sensor_msgs::LaserScan& scan_in,
+                         sensor_msgs::PointCloud2 &cloud_out,
+                         double range_cutoff = -1.0,
+                         int channel_options = channel_option::Default)
+      {
+        projectLaser_free_(scan_in, cloud_out, range_cutoff, channel_options);
+      }
+
+
       //! Transform a sensor_msgs::LaserScan into a sensor_msgs::PointCloud in target frame
       /*!
        * Transform a single laser scan from a linear array into a 3D
@@ -302,6 +311,12 @@ namespace laser_geometry
 
       //! Internal hidden representation of projectLaser
       void projectLaser_ (const sensor_msgs::LaserScan& scan_in,
+                          sensor_msgs::PointCloud2 &cloud_out,
+                          double range_cutoff,
+                          int channel_options);
+      
+      //! Internal hidden representation of projectLaser
+      void projectLaser_free_ (const sensor_msgs::LaserScan& scan_in,
                           sensor_msgs::PointCloud2 &cloud_out,
                           double range_cutoff,
                           int channel_options);
