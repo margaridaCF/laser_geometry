@@ -36,8 +36,7 @@
 namespace laser_geometry
 {
 
-  void
-    LaserProjection::projectLaser_ (const sensor_msgs::LaserScan& scan_in, sensor_msgs::PointCloud & cloud_out, double range_cutoff,
+  void LaserProjection::projectLaser_ (const sensor_msgs::LaserScan& scan_in, sensor_msgs::PointCloud & cloud_out, double range_cutoff,
                                    bool preservative, int mask)
   {
     boost::numeric::ublas::matrix<double> ranges(2, scan_in.ranges.size());
@@ -281,14 +280,32 @@ const boost::numeric::ublas::matrix<double>& LaserProjection::getUnitVectors_(do
   {
     size_t n_pts = scan_in.ranges.size ();
     Eigen::ArrayXXd ranges (n_pts, 2);
-    Eigen::ArrayXXd ranges_free (n_pts, 2);
     Eigen::ArrayXXd output (n_pts, 2);
 
-    // Get the ranges into Eigen format
+    // // Get the ranges into Eigen format
+    // for (size_t i = 0; i < n_pts; ++i)
+    // {
+    //   ranges (i, 0) = (double) scan_in.ranges[i];
+    //   ranges (i, 1) = (double) scan_in.ranges[i];
+    // }
+
+    std::set<int> free;
     for (size_t i = 0; i < n_pts; ++i)
     {
-      ranges (i, 0) = (double) scan_in.ranges[i];
-      ranges (i, 1) = (double) scan_in.ranges[i];
+      //check to see if we want to keep the point
+      const float range = scan_in.ranges[i];
+      if (!std::isfinite(range) && range > 0)
+      {
+        // Get ranges into Eigen format
+        ranges (i, 0) = (double) scan_in.range_max;
+        ranges (i, 1) = (double) scan_in.range_max;
+        free.insert(i);
+      }
+      else
+      {
+        ranges (i, 0) = (double) 0;
+        ranges (i, 1) = (double) 0;
+      }
     }
 
     // Check if our existing co_sine_map is valid
@@ -412,36 +429,15 @@ const boost::numeric::ublas::matrix<double>& LaserProjection::getUnitVectors_(do
     cloud_out.data.resize (cloud_out.row_step   * cloud_out.height);
     cloud_out.is_dense = false;
 
-    if (range_cutoff < 0)
-      range_cutoff = scan_in.range_max;
-
-    std::set<int> free;
-    for (size_t i = 0; i < n_pts; ++i)
-    {
-      //check to see if we want to keep the point
-      const float range = scan_in.ranges[i];
-      if (!std::isfinite(range) && range > 0)
-      {
-        // Get ranges into Eigen format
-        ranges_free (i, 0) = (double) scan_in.range_max;
-        ranges_free (i, 1) = (double) scan_in.range_max;
-        free.insert(i);
-      }
-      else
-      {
-        ranges_free (i, 0) = (double) 0;
-        ranges_free (i, 1) = (double) 0;
-      }
-    }
-
-    output = ranges_free * co_sine_map_;
-
+    // if (range_cutoff < 0)
+    //   range_cutoff = scan_in.range_max;
 
     unsigned int count = 0;
     for (size_t i = 0; i < n_pts; ++i)
     {
-      
-      if(free.find(i) != free.end())
+      //check to see if we want to keep the point
+      const float range = scan_in.ranges[i];
+      if(free.find(i) != free.end()) 
       {
         float *pstep = (float*)&cloud_out.data[count * cloud_out.point_step];
 
@@ -483,6 +479,7 @@ const boost::numeric::ublas::matrix<double>& LaserProjection::getUnitVectors_(do
     cloud_out.width = count;
     cloud_out.row_step   = cloud_out.point_step * cloud_out.width;
     cloud_out.data.resize (cloud_out.row_step   * cloud_out.height);
+
   }
 
   void LaserProjection::transformLaserScanToPointCloud_(const std::string &target_frame,
