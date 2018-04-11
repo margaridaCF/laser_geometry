@@ -508,7 +508,6 @@ const boost::numeric::ublas::matrix<double>& LaserProjection::getUnitVectors_(do
     //   ranges (i, 1) = (double) scan_in.ranges[i];
     // }
 
-    std::set<int> free;
     for (size_t i = 0; i < n_pts; ++i)
     {
       //check to see if we want to keep the point
@@ -516,14 +515,13 @@ const boost::numeric::ublas::matrix<double>& LaserProjection::getUnitVectors_(do
       if (!std::isfinite(range) && range > 0)
       {
         // Get ranges into Eigen format
-        ranges (i, 0) = (double) scan_in.range_max;
-        ranges (i, 1) = (double) scan_in.range_max;
-        free.insert(i);
+        ranges (i, 0) = (double) scan_in.range_max + 1;
+        ranges (i, 1) = (double) scan_in.range_max + 1;
       }
       else
       {
-        ranges (i, 0) = (double) 0;
-        ranges (i, 1) = (double) 0;
+        ranges (i, 0) = (double) scan_in.ranges[i];
+        ranges (i, 1) = (double) scan_in.ranges[i];
       }
     }
 
@@ -656,42 +654,40 @@ const boost::numeric::ublas::matrix<double>& LaserProjection::getUnitVectors_(do
     {
       //check to see if we want to keep the point
       const float range = scan_in.ranges[i];
-      if(free.find(i) != free.end()) 
+      float *pstep = (float*)&cloud_out.data[count * cloud_out.point_step];
+
+      // Copy XYZ
+      pstep[0] = output (i, 0);
+      pstep[1] = output (i, 1);
+      pstep[2] = 0;
+
+      // Copy intensity
+      if(idx_intensity != -1)
+        pstep[idx_intensity] = scan_in.intensities[i];
+
+      //Copy index
+      if(idx_index != -1)
+        ((int*)(pstep))[idx_index] = i;
+
+      // Copy distance
+      if(idx_distance != -1)
+        pstep[idx_distance] = range;
+
+      // Copy timestamp
+      if(idx_timestamp != -1)
+        pstep[idx_timestamp] = i * scan_in.time_increment;
+
+      // Copy viewpoint (0, 0, 0)
+      if(idx_vpx != -1 && idx_vpy != -1 && idx_vpz != -1)
       {
-        float *pstep = (float*)&cloud_out.data[count * cloud_out.point_step];
-
-        // Copy XYZ
-        pstep[0] = output (i, 0);
-        pstep[1] = output (i, 1);
-        pstep[2] = 0;
-
-        // Copy intensity
-        if(idx_intensity != -1)
-          pstep[idx_intensity] = scan_in.intensities[i];
-
-        //Copy index
-        if(idx_index != -1)
-          ((int*)(pstep))[idx_index] = i;
-
-        // Copy distance
-        if(idx_distance != -1)
-          pstep[idx_distance] = range;
-
-        // Copy timestamp
-        if(idx_timestamp != -1)
-          pstep[idx_timestamp] = i * scan_in.time_increment;
-
-        // Copy viewpoint (0, 0, 0)
-        if(idx_vpx != -1 && idx_vpy != -1 && idx_vpz != -1)
-        {
-          pstep[idx_vpx] = 0;
-          pstep[idx_vpy] = 0;
-          pstep[idx_vpz] = 0;
-        }
-
-        //make sure to increment count
-        ++count;
+        pstep[idx_vpx] = 0;
+        pstep[idx_vpy] = 0;
+        pstep[idx_vpz] = 0;
       }
+
+      //make sure to increment count
+      ++count;
+      
     }
 
     //resize if necessary
