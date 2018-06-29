@@ -18,8 +18,11 @@ int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "free_cloud_node");
 	ros::NodeHandle nh;
+	
+	std::string hokuyo_topic;
+	nh.getParam("hokuyo_topic", hokuyo_topic);
+	ros::Subscriber laser_scan_sub = nh.subscribe<sensor_msgs::LaserScan>(hokuyo_topic, 1, free_cloud_node::free_cloud_cb);
     free_cloud_node::free_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("free_cloud", 10);
-	ros::Subscriber laser_scan_sub = nh.subscribe<sensor_msgs::LaserScan>("hokuyo_laser_scan", 1, free_cloud_node::free_cloud_cb);
 	
 	ros::spin();
 }
